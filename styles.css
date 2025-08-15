@@ -1,23 +1,233 @@
-body {
-  margin: 0;
-  background-color: rgb(27, 27, 50);
-  text-align: center;
-  color: #fff;
-}
+/* =========================
+       Modern, responsive styling
+       ========================= */
 
-button {
-  cursor: pointer;
-  background-color: rgb(59, 59, 79);
-  border: 3px solid white;
-  color: white;
-}
+    /* 1) CSS custom properties (design tokens) for easy theming */
+    :root {
+      --bg: hsl(240 10% 8%);
+      --panel: hsl(240 14% 12%);
+      --panel-2: hsl(240 12% 16%);
+      --text: hsl(0 0% 98%);
+      --muted: hsl(240 5% 70%);
+      --primary: hsl(265 90% 66%);
+      --primary-contrast: hsl(280 100% 97%);
+      --ring: hsla(265, 90%, 66%, 0.5);
+      --ok: hsl(148 64% 42%);
+      --warn: hsl(35 90% 55%);
+    }
 
-input {
-  background-color: rgb(10, 10, 35);
-  color: white;
-  border: 1px solid rgb(59, 59, 79);
-}
+    /* 2) Light mode fallback via prefers-color-scheme */
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: hsl(0 0% 99%);
+        --panel: hsl(0 0% 100%);
+        --panel-2: hsl(0 0% 98%);
+        --text: hsl(240 10% 3%);
+        --muted: hsl(240 5% 36%);
+        --primary: hsl(265 90% 56%);
+        --primary-contrast: hsl(0 0% 100%);
+        --ring: hsla(265, 90%, 56%, 0.35);
+      }
+    }
 
-.bold {
-  font-weight: bold;
-}
+    /* 3) Global reset-ish styles */
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, hsl(265 90% 18% / 0.25), transparent),
+                  radial-gradient(1200px 600px at 90% 110%, hsl(200 90% 18% / 0.25), transparent),
+                  var(--bg);
+    }
+
+    /* 4) Page layout container */
+    .container {
+      width: min(1100px, 92vw);
+      margin: 64px auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: 0.3px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    /* 5) Card */
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid hsl(0 0% 100% / 0.05);
+      border-radius: 16px;
+      box-shadow: 0 1px 0 hsl(0 0% 100% / 0.05) inset,
+                  0 20px 40px hsl(0 0% 0% / 0.25);
+    }
+
+    /* 6) Input area */
+    .input-card {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    label { font-weight: 600; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    textarea {
+      /* Accessible, comfortable text input */
+      width: 100%;
+      min-height: 120px;
+      resize: vertical; /* user can expand if needed */
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid hsl(0 0% 100% / 0.08);
+      background: hsl(0 0% 100% / 0.03);
+      color: var(--text);
+      outline: none;
+      transition: box-shadow 140ms ease, border-color 140ms ease;
+    }
+    textarea:focus {
+      box-shadow: 0 0 0 6px var(--ring);
+      border-color: var(--primary);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      justify-content: space-between;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+    .switch input {
+      /* Visually hidden but accessible checkbox */
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+    .toggle {
+      width: 46px; height: 28px;
+      border-radius: 999px;
+      background: hsl(0 0% 100% / 0.14);
+      position: relative;
+      transition: background 160ms ease;
+      border: 1px solid hsl(0 0% 100% / 0.1);
+    }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 50%; left: 4px;
+      width: 20px; height: 20px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: white;
+      box-shadow: 0 4px 10px hsl(0 0% 0% / 0.25);
+      transition: left 160ms ease;
+    }
+    .switch input:checked + .toggle {
+      background: var(--primary);
+    }
+    .switch input:checked + .toggle::after {
+      left: 22px;
+    }
+
+    .button {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, hsl(265 90% 62%), hsl(265 90% 54%));
+      color: var(--primary-contrast);
+      padding: 12px 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+      box-shadow: 0 10px 20px hsla(265 90% 40% / 0.35);
+    }
+    .button:hover { filter: brightness(1.05); }
+    .button:active { transform: translateY(1px); }
+
+    /* 7) Output grid */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 1024px) {
+      .output-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .output-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat {
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .stat::before {
+      /* Soft gradient highlight in the corner for visual interest */
+      content: "";
+      position: absolute;
+      inset: -2px -2px auto auto;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, hsl(265 90% 66% / 0.25), transparent);
+      filter: blur(8px);
+      z-index: -1;
+      transform: translate(20px, -20px);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: clamp(18px, 2.6vw, 28px);
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: hsl(0 0% 100% / 0.08);
+      border: 1px solid hsl(0 0% 100% / 0.08);
+    }
