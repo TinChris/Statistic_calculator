@@ -31,22 +31,24 @@
 
     // Mode: most frequent value(s). Returns null if all frequencies are identical (i.e., no mode).
     // Returns an array of modes if multiple values share the highest frequency.
-    const getMode = (array) => {
-      const counts = new Map();
-      for (const el of array) counts.set(el, (counts.get(el) || 0) + 1);
-      if (counts.size === 0) return null;
 
-      const freqs = [...counts.values()];
-      const allEqual = freqs.every((f) => f === freqs[0]);
-      if (allEqual) return null;
 
-      let maxCount = 0;
-      for (const c of counts.values()) if (c > maxCount) maxCount = c;
+const getMode = (array) => {
+  const counts = new Map();
+  for (const el of array) counts.set(el, (counts.get(el) || 0) + 1);
 
-      return [...counts.entries()]
-        .filter(([, c]) => c === maxCount)
-        .map(([v]) => v);
-    };
+  if (counts.size === 0) return null;
+
+  const freqs = [...counts.values()];
+  const allAreOne = freqs.every((f) => f === 1);
+  if (allAreOne) return null; // NO MODE only when all values are unique
+
+  const max = Math.max(...freqs);
+  return [...counts.entries()]
+    .filter(([, c]) => c === max)
+    .map(([v]) => v); // returns [mode] or [m1, m2, ...] for multimodal
+};
+
 
     // Range: max - min of the array.
     const getRange = (array) => Math.max(...array) - Math.min(...array);
