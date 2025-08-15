@@ -1,53 +1,424 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="./styles.css" />
-    <script src="./script.js"></script>
-    <title>Statistics Calculator</title>
-  </head>
-  <body>
-    <h1>Statistics Calculator</h1>
-    <p>Enter a list of comma-separated numbers.</p>
-    <form onsubmit="calculate(); return false;">
-      <label for="numbers">Numbers:</label>
-      <input type="text" name="numbers" id="numbers" />
-      <button type="submit">Calculate</button>
-    </form>
-    <div class="results">
-      <p>
-        The <dfn>mean</dfn> of a list of numbers is the average, calculated by
-        taking the sum of all numbers and dividing that by the count of numbers.
-      </p>
-      <p class="bold">Mean: <span id="mean"></span></p>
-      <p>
-        The <dfn>median</dfn> of a list of numbers is the number that appears in
-        the middle of the list, when sorted from least to greatest.
-      </p>
-      <p class="bold">Median: <span id="median"></span></p>
-      <p>
-        The <dfn>mode</dfn> of a list of numbers is the number that appears most
-        often in the list.
-      </p>
-      <p class="bold">Mode: <span id="mode"></span></p>
-      <p>
-        The <dfn>range</dfn> of a list of numbers is the difference between the
-        largest and smallest numbers in the list.
-      </p>
-      <p class="bold">Range: <span id="range"></span></p>
-      <p>
-        The <dfn>variance</dfn> of a list of numbers measures how far the values
-        are from the mean, on average.
-      </p>
-      <p class="bold">Variance: <span id="variance"></span></p>
-      <p>
-        The <dfn>standard deviation</dfn> of a list of numbers is the square
-        root of the variance.
-      </p>
-      <p class="bold">
-        Standard Deviation: <span id="standardDeviation"></span>
-      </p>
-    </div>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>Statistics Calculator</title>
+  <meta name="description" content="A modern, responsive statistics calculator (mean, median, mode, range, variance, standard deviation)." />
+
+  <style>
+    /* =========================
+       Modern, responsive styling
+       ========================= */
+
+    /* 1) CSS custom properties (design tokens) for easy theming */
+    :root {
+      --bg: hsl(240 10% 8%);
+      --panel: hsl(240 14% 12%);
+      --panel-2: hsl(240 12% 16%);
+      --text: hsl(0 0% 98%);
+      --muted: hsl(240 5% 70%);
+      --primary: hsl(265 90% 66%);
+      --primary-contrast: hsl(280 100% 97%);
+      --ring: hsla(265, 90%, 66%, 0.5);
+      --ok: hsl(148 64% 42%);
+      --warn: hsl(35 90% 55%);
+    }
+
+    /* 2) Light mode fallback via prefers-color-scheme */
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: hsl(0 0% 99%);
+        --panel: hsl(0 0% 100%);
+        --panel-2: hsl(0 0% 98%);
+        --text: hsl(240 10% 3%);
+        --muted: hsl(240 5% 36%);
+        --primary: hsl(265 90% 56%);
+        --primary-contrast: hsl(0 0% 100%);
+        --ring: hsla(265, 90%, 56%, 0.35);
+      }
+    }
+
+    /* 3) Global reset-ish styles */
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, hsl(265 90% 18% / 0.25), transparent),
+                  radial-gradient(1200px 600px at 90% 110%, hsl(200 90% 18% / 0.25), transparent),
+                  var(--bg);
+    }
+
+    /* 4) Page layout container */
+    .container {
+      width: min(1100px, 92vw);
+      margin: 64px auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: 0.3px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    /* 5) Card */
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid hsl(0 0% 100% / 0.05);
+      border-radius: 16px;
+      box-shadow: 0 1px 0 hsl(0 0% 100% / 0.05) inset,
+                  0 20px 40px hsl(0 0% 0% / 0.25);
+    }
+
+    /* 6) Input area */
+    .input-card {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    label { font-weight: 600; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    textarea {
+      /* Accessible, comfortable text input */
+      width: 100%;
+      min-height: 120px;
+      resize: vertical; /* user can expand if needed */
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid hsl(0 0% 100% / 0.08);
+      background: hsl(0 0% 100% / 0.03);
+      color: var(--text);
+      outline: none;
+      transition: box-shadow 140ms ease, border-color 140ms ease;
+    }
+    textarea:focus {
+      box-shadow: 0 0 0 6px var(--ring);
+      border-color: var(--primary);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      justify-content: space-between;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+    .switch input {
+      /* Visually hidden but accessible checkbox */
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+    .toggle {
+      width: 46px; height: 28px;
+      border-radius: 999px;
+      background: hsl(0 0% 100% / 0.14);
+      position: relative;
+      transition: background 160ms ease;
+      border: 1px solid hsl(0 0% 100% / 0.1);
+    }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 50%; left: 4px;
+      width: 20px; height: 20px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: white;
+      box-shadow: 0 4px 10px hsl(0 0% 0% / 0.25);
+      transition: left 160ms ease;
+    }
+    .switch input:checked + .toggle {
+      background: var(--primary);
+    }
+    .switch input:checked + .toggle::after {
+      left: 22px;
+    }
+
+    .button {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, hsl(265 90% 62%), hsl(265 90% 54%));
+      color: var(--primary-contrast);
+      padding: 12px 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+      box-shadow: 0 10px 20px hsla(265 90% 40% / 0.35);
+    }
+    .button:hover { filter: brightness(1.05); }
+    .button:active { transform: translateY(1px); }
+
+    /* 7) Output grid */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 1024px) {
+      .output-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .output-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat {
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .stat::before {
+      /* Soft gradient highlight in the corner for visual interest */
+      content: "";
+      position: absolute;
+      inset: -2px -2px auto auto;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, hsl(265 90% 66% / 0.25), transparent);
+      filter: blur(8px);
+      z-index: -1;
+      transform: translate(20px, -20px);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: clamp(18px, 2.6vw, 28px);
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: hsl(0 0% 100% / 0.08);
+      border: 1px solid hsl(0 0% 100% / 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="title">Statistics Calculator</div>
+        <p class="subtitle">Enter a list of numbers and compute Mean, Median, Mode, Range, Variance, and Standard Deviation. The layout is responsive and keyboard-friendly.</p>
+      </div>
+    </header>
+
+    <!-- INPUT PANEL: teaches clean structure and accessible controls -->
+    <section class="card input-card" aria-labelledby="numbers-label">
+      <div>
+        <label id="numbers-label" for="numbers">Numbers</label>
+        <p class="hint">Separate values with commas, spaces, semicolons or line breaks. Example: <code>1, 2, 2, 3, 4</code></p>
+        <textarea id="numbers" name="numbers" placeholder="Type or paste numbers here…&#10;Example: 1, 2, 2, 3, 4"></textarea>
+      </div>
+
+      <div class="controls">
+        <!-- A simple sample vs population toggle for variance/stdev explanation -->
+        <label class="switch" title="Toggle between Population (N) and Sample (N-1) for Variance/StdDev">
+          <input id="sampleToggle" type="checkbox" aria-describedby="toggle-help" />
+          <span class="toggle" aria-hidden="true"></span>
+          <span>Sample (N−1) for variance & stdev</span>
+        </label>
+
+        <button class="button" id="calcBtn" type="button">Calculate</button>
+      </div>
+
+      <p id="toggle-help" class="hint">When enabled, variance and standard deviation are computed using N−1 (sample). Otherwise they use N (population).</p>
+    </section>
+
+    <!-- OUTPUT GRID: each tile displays one statistic; IDs map to JS textContent updates -->
+    <section class="output-grid" aria-label="Results">
+      <article class="card stat" aria-live="polite">
+        <div class="stat-label">Mean</div>
+        <div class="stat-value" id="mean">—</div>
+      </article>
+      <article class="card stat" aria-live="polite">
+        <div class="stat-label">Median</div>
+        <div class="stat-value" id="median">—</div>
+      </article>
+      <article class="card stat" aria-live="polite">
+        <div class="stat-label">Mode</div>
+        <div class="stat-value" id="mode">—</div>
+      </article>
+      <article class="card stat" aria-live="polite">
+        <div class="stat-label">Range</div>
+        <div class="stat-value" id="range">—</div>
+      </article>
+      <article class="card stat" aria-live="polite">
+        <div class="stat-label">Variance</div>
+        <div class="stat-value" id="variance">—</div>
+      </article>
+      <article class="card stat" aria-live="polite">
+        <div class="stat-label">Std. Deviation</div>
+        <div class="stat-value" id="standardDeviation">—</div>
+      </article>
+    </section>
+
+    <footer>
+      <span class="badge">Tip</span>
+      <span>Press <kbd>Enter</kbd> in the input to calculate quickly.</span>
+    </footer>
+  </div>
+
+  <script>
+    // =========================
+    // JavaScript logic, well-commented
+    // =========================
+
+    // Utility formatter: rounds to a fixed number of digits for clean UI.
+    // If value is not finite (e.g., NaN), we return the original (to display a dash).
+    const fmt = (n, digits = 4) => Number.isFinite(n) ? Number(n.toFixed(digits)) : n;
+
+    // Parses a string into an array of finite numbers.
+    // Accepts commas, spaces, semicolons, and newlines as separators.
+    const parseNumbers = (input) => {
+      return input
+        .split(/[\,\s;]+/g)        // split by comma/space/semicolon/newline
+        .map(Number)                 // coerce to numbers
+        .filter((n) => Number.isFinite(n)); // keep only finite numbers
+    };
+
+    // Mean (average) of a numeric array.
+    const getMean = (array) => array.reduce((acc, el) => acc + el, 0) / array.length;
+
+    // Median: middle value of the sorted list; if even length, average of the two middles.
+    const getMedian = (array) => {
+      const sorted = array.toSorted((a, b) => a - b); // ES2023 immutable sort
+      const len = sorted.length;
+      const mid = Math.floor(len / 2);
+      return len % 2 === 0
+        ? (sorted[mid - 1] + sorted[mid]) / 2
+        : sorted[mid];
+    };
+
+    // Mode: most frequent value(s). Returns null if all frequencies are identical (i.e., no mode).
+    // Returns an array of modes if multiple values share the highest frequency.
+    const getMode = (array) => {
+      const counts = new Map();
+      for (const el of array) counts.set(el, (counts.get(el) || 0) + 1);
+      if (counts.size === 0) return null;
+
+      const freqs = [...counts.values()];
+      const allEqual = freqs.every((f) => f === freqs[0]);
+      if (allEqual) return null;
+
+      let maxCount = 0;
+      for (const c of counts.values()) if (c > maxCount) maxCount = c;
+
+      return [...counts.entries()]
+        .filter(([, c]) => c === maxCount)
+        .map(([v]) => v);
+    };
+
+    // Range: max - min of the array.
+    const getRange = (array) => Math.max(...array) - Math.min(...array);
+
+    // Variance: average of squared deviations from the mean.
+    // population = true  -> divide by N (population variance)
+    // population = false -> divide by N - 1 (sample variance)
+    const getVariance = (array, population = true) => {
+      const mean = getMean(array);
+      const sumSq = array.reduce((acc, el) => {
+        const d = el - mean;
+        return acc + d * d;
+      }, 0);
+      const denom = population ? array.length : array.length - 1;
+      return sumSq / denom;
+    };
+
+    // Standard deviation: square root of variance.
+    const getStandardDeviation = (array, population = true) => Math.sqrt(getVariance(array, population));
+
+    // Main calculate function: reads input, computes stats, and writes results into the UI.
+    const calculate = () => {
+      const raw = document.querySelector("#numbers")?.value ?? "";
+      const numbers = parseNumbers(raw);
+      const sample = document.querySelector('#sampleToggle')?.checked ?? false;
+
+      // Guard against empty input: show dashes, then return.
+      if (numbers.length === 0) {
+        document.querySelector("#mean").textContent = "—";
+        document.querySelector("#median").textContent = "—";
+        document.querySelector("#mode").textContent = "—";
+        document.querySelector("#range").textContent = "—";
+        document.querySelector("#variance").textContent = "—";
+        document.querySelector("#standardDeviation").textContent = "—";
+        return;
+      }
+
+      const mean = getMean(numbers);
+      const median = getMedian(numbers);
+      const modeVal = getMode(numbers);
+      const range = getRange(numbers);
+      const variance = getVariance(numbers, !sample ? true : false); // toggle N vs N-1
+      const stdev = getStandardDeviation(numbers, !sample ? true : false);
+
+      document.querySelector("#mean").textContent = fmt(mean, 4);
+      document.querySelector("#median").textContent = fmt(median, 4);
+      document.querySelector("#mode").textContent =
+        modeVal == null ? "no mode" : Array.isArray(modeVal) ? modeVal.join(", ") : modeVal;
+      document.querySelector("#range").textContent = fmt(range, 4);
+      document.querySelector("#variance").textContent = fmt(variance, 4);
+      document.querySelector("#standardDeviation").textContent = fmt(stdev, 4);
+    };
+
+    // Wire up UI interactions: button click and pressing Enter in the textarea.
+    document.querySelector('#calcBtn').addEventListener('click', calculate);
+    document.querySelector('#numbers').addEventListener('keydown', (e) => {
+      // If user presses Enter + (Cmd/Ctrl or plain Enter on desktop), trigger calculate.
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey || !e.shiftKey)) {
+        e.preventDefault();
+        calculate();
+      }
+    });
+  </script>
+</body>
 </html>
