@@ -34,20 +34,21 @@
 
 
 const getMode = (array) => {
-  const counts = new Map();
-  for (const el of array) counts.set(el, (counts.get(el) || 0) + 1);
-
-  if (counts.size === 0) return null;
-
-  const freqs = [...counts.values()];
-  const allAreOne = freqs.every((f) => f === 1);
-  if (allAreOne) return null; // NO MODE only when all values are unique
-
-  const max = Math.max(...freqs);
-  return [...counts.entries()]
-    .filter(([, c]) => c === max)
-    .map(([v]) => v); // returns [mode] or [m1, m2, ...] for multimodal
-};
+  const counts = {};
+  array.forEach((el) => {
+    counts[el] = (counts[el] || 0) + 1;
+  })
+  if (new Set(Object.values(counts)).size === 1) {
+    return null;
+  }
+  const highest = Object.keys(counts).sort(
+    (a, b) => counts[b] - counts[a]
+  )[0];
+  const mode = Object.keys(counts).filter(
+    (el) => counts[el] === counts[highest]
+  );
+  return mode.join(", ");
+}
 
 
     // Range: max - min of the array.
